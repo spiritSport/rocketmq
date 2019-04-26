@@ -1,0 +1,19 @@
+@startuml
+autonumber
+DefaultMQProducer -> DefaultMQProducer: start
+activate DefaultMQProducer
+DefaultMQProducer -->DefaultMQProducerImpl:start
+
+DefaultMQProducerImpl --> DefaultMQProducer:changeInstanceNameToPID
+DefaultMQProducerImpl --> MQClientInstance:registerProducer
+DefaultMQProducerImpl --> MQClientInstance:start
+MQClientInstance -->MQClientAPIImpl:start
+MQClientInstance -->MQClientInstance:startScheduledTask
+MQClientInstance -->PullMessageService:start
+MQClientInstance -->RebalanceService:start
+MQClientInstance -->DefaultMQProducerImpl:start(false)
+DefaultMQProducerImpl --> MQClientInstance:sendHeartbeatToAllBrokerWithLock
+note right:向所有broker发送心跳
+DefaultMQProducer -->TraceDispatcher:start
+note right:根据配置决定是否运行
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+
+[producer]
+[broker]
+[nameSever]
+folder "broker文件系统" {
+    [IndexFile]
+    [ExtraData]
+    [ConsumeQueue]
+    [CommitLog]
+
+}
+folder "nameSever文件系统" {
+    [nameSever文件]
+
+}
+
+[producer] --> [broker]
+
+
+[broker] --> [CommitLog]
+[broker] --> [ConsumeQueue]
+[broker] --> [ExtraData]
+[broker] --> [IndexFile]
+[producer] --> [nameSever]
+[nameSever] --> [nameSever文件]
+
+@enduml

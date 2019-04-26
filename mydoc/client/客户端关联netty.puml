@@ -1,0 +1,29 @@
+@startuml
+
+
+class MQClientInstance {
+ MQClientAPIImpl mQClientAPIImpl
+}
+
+class MQClientAPIImpl{
+RemotingClient remotingClient
+}
+
+MQClientInstance -- MQClientAPIImpl
+
+MQClientAPIImpl -- RemotingClient
+
+interface RemotingClient{
+}
+
+abstract class NettyRemotingAbstract{
+
+}
+
+class NettyRemotingClient{
+}
+RemotingClient<|--NettyRemotingClient
+NettyRemotingAbstract <|--NettyRemotingClient
+
+note right : netty在这里启动  通过这里的一些方法和继承的抽象类NettyRemotingAbstract 实现内容的收发，都是直接channel flush加上匿名内部类的回调.例如invokeSyncImpl
+@enduml

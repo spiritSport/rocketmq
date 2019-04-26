@@ -1,0 +1,11 @@
+@startuml
+:生产者: as producer
+(Use the application) as (Use)
+(Use the application) as (Use2)
+
+
+producer ---> (Use)
+producer ---> (Use2)
+
+
+@enduml

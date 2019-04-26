@@ -1,0 +1,16 @@
+@startuml
+DefaultMQPullConsumer -> DefaultMQPullConsumerImpl :start
+DefaultMQPullConsumerImpl  ->MQClientInstance:start
+MQClientInstance ->PullMessageService:start
+== 线程启动 ==
+
+PullMessageService -> PullMessageService: run
+activate PullMessageService #FFBBBB
+PullMessageService -> PullMessageService: pullMessage
+activate PullMessageService #DarkSalmon
+PullMessageService ->DefaultMQPushConsumerImpl:pullMessage
+DefaultMQPushConsumerImpl->PullAPIWrapper:pullKernelImpl
+
+PullAPIWrapper->PullCallback:onSuccess
+note right: DefaultMQPushConsumerImpl 287行的匿名内部类
+@enduml

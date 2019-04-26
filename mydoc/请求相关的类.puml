@@ -1,0 +1,53 @@
+@startuml
+
+
+class DispatchRequest{
+ private final String topic;
+    private final int queueId
+    private final long commitLogOffset;//偏移量
+    private int msgSize;
+    private final long tagsCode;
+    private final long storeTimestamp;
+    private final long consumeQueueOffset;
+    private final String keys;
+    private final boolean success;
+    private final String uniqKey;
+    private final int sysFlag;
+    private final long preparedTransactionOffset;
+    private final Map<String, String> propertiesMap;
+    private byte[] bitMap;
+}
+note left:store中的
+
+class RemotingCommand{
+    byte[] body;/正文
+    CommandCustomHeader customHeader
+    int opaque
+}
+note right:remoting中的，客户端向nameserver，borker发数据，都是使用这个对象
+
+class PullRequest{
+RemotingCommand requestCommand;
+}
+note right:broker
+PullRequest *-- RemotingCommand
+
+class ManyPullRequest{
+ArrayList<PullRequest> pullRequestList
+}
+note right:broker
+ManyPullRequest*--PullRequest
+
+abstract  RemotingSerializable{
+}
+note left:负责序列化的,有非常多的子类.org.apache.rocketmq.common.protocol.body下的是全部是它的子类
+RemotingCommand .. RemotingSerializable
+
+interface CommandCustomHeader{
+
+}
+note right: 请求头的一些内容，org.apache.rocketmq.common.protocol.header下都是它的实现类
+
+RemotingCommand *-- CommandCustomHeader
+
+@enduml

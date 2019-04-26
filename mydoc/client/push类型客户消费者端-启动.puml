@@ -1,0 +1,18 @@
+@startuml
+DefaultMQPushConsumerImpl -> DefaultMQPushConsumerImpl:start
+activate DefaultMQPushConsumerImpl #FFBBBB
+DefaultMQPushConsumerImpl -> ConsumeMessageConcurrentlyService:start
+note left:混合一些拉取本地偏移量
+ConsumeMessageConcurrentlyService ->ConsumeMessageConcurrentlyService:cleanExpireMsg 这步是通过定时器异步触发
+ConsumeMessageConcurrentlyService->MQClientInstance:registerConsumer:registerConsumer
+ConsumeMessageConcurrentlyService->MQClientInstance:registerConsumer:start
+MQClientInstance-> MQClientAPIImpl:start
+MQClientInstance->MQClientInstance:startScheduledTask 这里有6，7种定时任务
+MQClientInstance->PullMessageService:start
+MQClientInstance->RebalanceService:start 这里使用异步方式，通过另一个线程定时任务方式实现再平衡
+MQClientInstance->DefaultMQProducerImpl:start
+DefaultMQPushConsumerImpl -> DefaultMQPushConsumerImpl:updateTopicSubscribeInfoWhenSubscriptionChanged
+DefaultMQPushConsumerImpl -> MQClientInstance:checkClientInBroker
+DefaultMQPushConsumerImpl -> MQClientInstance:sendHeartbeatToAllBrokerWithLock
+DefaultMQPushConsumerImpl -> MQClientInstance:rebalanceImmediately
+@enduml

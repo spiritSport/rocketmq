@@ -1,0 +1,52 @@
+@startuml
+
+interface MQAdmin{
+}
+
+interface MQProducer{
+}
+
+class ClientConfig{
+}
+
+class DefaultMQProducer{
+}
+note right:这里是入口类
+class DefaultMQProducerImpl{
+
+}
+
+class MQClientInstance {
+ MQClientAPIImpl mQClientAPIImpl
+}
+
+class MQClientAPIImpl{
+RemotingClient remotingClient
+}
+note right:这里实际启动netty
+
+MQClientInstance -- MQClientAPIImpl
+
+MQClientAPIImpl -- RemotingClient
+
+interface RemotingClient{
+}
+
+abstract class NettyRemotingAbstract{
+
+}
+
+class NettyRemotingClient{
+}
+RemotingClient<|--NettyRemotingClient
+NettyRemotingAbstract <|--NettyRemotingClient
+
+
+MQAdmin <|.. MQProducer
+MQProducer <|.. DefaultMQProducer
+ClientConfig <|-- DefaultMQProducer
+DefaultMQProducer -- DefaultMQProducerImpl
+DefaultMQProducerImpl ..> MQClientInstance
+
+
+@enduml
