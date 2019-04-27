@@ -1,0 +1,11 @@
+@startuml
+autonumber
+调用者 --> NettyRemotingClient: invokeOneway
+NettyRemotingClient-->NettyRemotingClient:doBeforeRpcHooks
+NettyRemotingClient->NettyRemotingAbstract:invokeOnewayImpl
+NettyRemotingAbstract-->SemaphoreOneway:tryLock
+NettyRemotingAbstract-->Channel:writeAndFlush
+note right:这里有1个通过netty 异步回调，operationComplete方法实现ChannelFuture释放
+
+'operationComplete
+@enduml

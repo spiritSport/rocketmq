@@ -1,0 +1,27 @@
+@startuml
+
+class TopicRouteData{
+    - String orderTopicConf;
+    - List<QueueData> queueDatas;
+    - List<BrokerData> brokerDatas;
+    - HashMap<String/* brokerAddr */, List<String>/* Filter Server */> filterServerTable;
+}
+
+class QueueData{
+    - String brokerName;
+    - int readQueueNums;
+    - int writeQueueNums;
+    - int perm;
+    - int topicSynFlag;
+}
+
+class BrokerData{
+    - String cluster
+    - String brokerName
+    - HashMap<Long/* brokerId */, String/* broker address */> brokerAddrs
+}
+
+TopicRouteData -->QueueData
+TopicRouteData -->BrokerData
+
+@enduml

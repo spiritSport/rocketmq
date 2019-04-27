@@ -1,0 +1,33 @@
+@startuml
+autonumber
+调用者 --> NettyRemotingClient: invokeAsync
+    note right
+     这里传入1个InvokeCallback的匿名内部类，
+     其中operationComplete会在第6步WriteAndFlush异步返回数据时调用
+      end note
+NettyRemotingClient-->NettyRemotingClient:doBeforeRpcHooks
+NettyRemotingClient->NettyRemotingAbstract:invokeAsyncImpl
+activate NettyRemotingAbstract
+NettyRemotingAbstract->SemaphoreAsync:tryAcquire
+alt 获取锁 case
+    NettyRemotingAbstract->NettyRemotingAbstract.responseTable:put
+        note right: opaque, responseFuture存入
+    NettyRemotingAbstract-->Channel:writeAndFlush
+        note right
+            这里有1个异步回调，记为invokeAyncCallback 执行如下功能
+            remove第5步加入的responseFuture
+            如果返回结果失败，执行NettyRemotingAbstract.requestFail方法
+            该方法最终会调用第1步说明的匿名内部类operationComplete方法
+        end note
+else
+    NettyRemotingAbstract->NettyRemotingAbstract:抛出异常
+        note right
+        RemotingTooMuchRequestException或RemotingTimeoutException
+        过多请求或超时异常
+         end note
+end
+
+return RemotingCommand
+
+'operationComplete
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+autonumber
+调用者 --> NettyRemotingClient: invokeSync
+NettyRemotingClient-->NettyRemotingClient:doBeforeRpcHooks
+NettyRemotingClient->NettyRemotingAbstract:invokeSyncImpl
+activate NettyRemotingAbstract
+NettyRemotingAbstract->NettyRemotingAbstract.responseTable:put
+note right: opaque, responseFuture存入
+ NettyRemotingAbstract-->Channel:writeAndFlush
+note right
+这里有1个异步回调，记为invokeSyncCallback 会另行描述
+第4步加入的responseFuture会在这里remove
+end note
+return RemotingCommand
+NettyRemotingClient->NettyRemotingClient:doAfterRpcHooks
+'operationComplete
+@enduml

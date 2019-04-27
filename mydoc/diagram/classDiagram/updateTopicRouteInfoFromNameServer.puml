@@ -1,0 +1,25 @@
+@startuml
+autonumber
+MQClientInstance ->Lock:tryLock
+note right:加锁
+MQClientInstance->MQClientAPIImpl:getTopicRouteInfoFromNameServer
+MQClientAPIImpl->RemotingClient:invokeSync
+RemotingClient->NettyRemotingAbstract:invokeSyncImpl
+note right :NettyRemotingAbstract是RemotingClient的父类
+
+ NettyRemotingAbstract->Channel:writeAndFlush
+ note right  : 直接数据发送,通过回调触发
+NettyRemotingAbstract->esponseFuture:waitResponse
+note right:等待一定毫秒（超时时间-之前执行话费的的时间）
+NettyRemotingAbstract->NettyRemotingAbstract.responseTable:remove
+note right: 删掉这次请求对应的内存map记录
+MQClientAPIImpl->TopicRouteData:decode
+note right:二进制转字符串，再通过类的反序列化转为对象
+
+MQClientInstance -> MQClientInstance: updateTopicRouteInfoFromNameServer
+MQClientInstance -> MQClientInstance.brokerAddrTable:put
+MQClientInstance -> MQClientInstance.topicRouteTable:put
+MQClientInstance ->Lock:unlock
+note right:解锁
+
+@enduml

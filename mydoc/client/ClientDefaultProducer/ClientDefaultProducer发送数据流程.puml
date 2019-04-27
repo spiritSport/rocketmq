@@ -1,0 +1,23 @@
+@startuml
+autonumber
+DefaultMQProducer -> DefaultMQProducer:  send
+DefaultMQProducer -> DefaultMQProducerImpl:send
+DefaultMQProducerImpl->DefaultMQProducerImpl:sendDefaultImpl
+DefaultMQProducerImpl->DefaultMQProducerImpl:tryToFindTopicPublishInfo
+DefaultMQProducerImpl->DefaultMQProducerImpl:sendKernelImpl
+DefaultMQProducerImpl->MQClientInstance:findBrokerAddressInPublish
+DefaultMQProducerImpl->MQClientInstance:getMQClientAPIImpl
+MQClientInstance->MQClientAPIImpl:sendMessage
+
+alt ONEWAY case
+MQClientAPIImpl->MQClientAPIImpl:invokeOneway
+note right: 单向的，不需要返回值
+else ASYNC case
+MQClientAPIImpl->MQClientAPIImpl:sendMessageAsync
+note right: 异步返回响应
+else SYNC case
+MQClientAPIImpl->MQClientAPIImpl:sendMessageSync
+note right: 同步返回响应
+
+ end
+@enduml

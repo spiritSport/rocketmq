@@ -17,7 +17,7 @@ clientId规则  客户端ip@客户端的pid
         return sb.toString();
     }
 ```
-上文中的clientName通过UtilAll.getPid先取到程序在操作系统中的pid
+上文中的clientName是通过UtilAll.getPid先取到程序在操作系统中的pid
 ```java
 public static int getPid() {
         RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();

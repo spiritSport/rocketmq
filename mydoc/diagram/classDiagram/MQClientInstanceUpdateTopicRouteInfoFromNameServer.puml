@@ -1,0 +1,82 @@
+@startuml
+
+class MQClientInstance{
+    - final  ConcurrentMap<String/* group */, MQProducerInner> producerTable
+    - final ConcurrentMap<String/* group */, MQConsumerInner> consumerTable
+    - final ConcurrentMap<String/* Topic */, TopicRouteData> topicRouteTable
+    - final ConcurrentMap<String/* Broker Name */, HashMap<Long/* brokerId */, String/* address */>> brokerAddrTable
+    - final ConcurrentMap<String/* Broker Name */, HashMap<String/* address */, Integer>> brokerVersionTable
+}
+
+note left of MQClientInstance
+ 该类只有1个实例
+ 3根据前2步的topic去远端name server拉取数据，
+ 存到这里的brokerAddrTable，topicRouteTable
+end note
+
+interface MQProducerInner{
+    Set<String> getPublishTopicList()
+
+}
+
+'class DefaultMQProducerImpl{
+'
+'}
+'DefaultMQProducerImpl--|>MQProducerInner
+
+note left: 1从这里取topic
+
+interface MQConsumerInner{
+    Set<SubscriptionData> subscriptions()
+}
+
+'class DefaultMQPullConsumerImpl{
+'}
+'class DefaultMQPushConsumerImpl{
+'}
+'DefaultMQPullConsumerImpl--|>MQConsumerInner
+'DefaultMQPushConsumerImpl--|>MQConsumerInner
+
+class SubscriptionData{
+}
+MQConsumerInner-->SubscriptionData
+
+class SubscriptionData{
+    - String topic;
+    - String subString
+    - Set<String> tagsSet
+    - Set<Integer> codeSet
+}
+note left: 2从这里的topic字段取topic
+
+MQClientInstance -->MQProducerInner
+MQClientInstance -->MQConsumerInner
+MQClientInstance -->TopicRouteData
+
+
+class TopicRouteData{
+    - String orderTopicConf;
+    - List<QueueData> queueDatas;
+    - List<BrokerData> brokerDatas;
+    - HashMap<String/* brokerAddr */, List<String>/* Filter Server */> filterServerTable;
+}
+
+class QueueData{
+    - String brokerName;
+    - int readQueueNums;
+    - int writeQueueNums;
+    - int perm;
+    - int topicSynFlag;
+}
+
+class BrokerData{
+    - String cluster
+    - String brokerName
+    - HashMap<Long/* brokerId */, String/* broker address */> brokerAddrs
+}
+
+TopicRouteData -->QueueData
+TopicRouteData -->BrokerData
+
+
+@enduml

@@ -1,0 +1,42 @@
+@startuml
+
+interface RemotingClient{
+
+    RemotingCommand invokeSync(final String addr, final RemotingCommand request, final long timeoutMillis)
+    void invokeAsync(final String addr, final RemotingCommand request, final long timeoutMillis, final InvokeCallback invokeCallback)
+    void invokeOneway(final String addr, final RemotingCommand request, final long timeoutMillis)
+
+}
+
+abstract class NettyRemotingAbstract{
+  ConcurrentMap<Integer /* opaque */, ResponseFuture> responseTable
+  HashMap<Integer/* request code */, Pair<NettyRequestProcessor, ExecutorService>> processorTable
+  Pair<NettyRequestProcessor, ExecutorService> defaultRequestProcessor
+  List<RPCHook> rpcHooks
+}
+
+class Channel{
+ ChannelFuture writeAndFlush(Object var1, ChannelPromise var2)
+}
+note right:netty的类，writeAndFlush方法直接发送请求
+class NettyRemotingClient{
+    NettyClientConfig nettyClientConfig
+    Bootstrap bootstrap
+    EventLoopGroup eventLoopGroupWorker
+    Lock lockChannelTables
+    ConcurrentMap<String /* addr */, ChannelWrapper> channelTables
+    Timer timer
+    AtomicReference<List<String>> namesrvAddrList
+    AtomicReference<String> namesrvAddrChoosed
+    AtomicInteger namesrvIndex
+    Lock lockNamesrvChannel
+    ExecutorService publicExecutor
+    ExecutorService callbackExecutor
+    ChannelEventListener channelEventListener
+    DefaultEventExecutorGroup defaultEventExecutorGroup
+}
+
+NettyRemotingClient ..|>RemotingClient
+NettyRemotingClient --|>NettyRemotingAbstract
+NettyRemotingAbstract-->Channel
+@enduml

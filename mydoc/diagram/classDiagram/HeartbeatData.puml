@@ -1,0 +1,35 @@
+@startuml
+
+class HeartbeatData{
+     - String clientID
+    - Set<ProducerData> producerDataSet
+    - Set<ConsumerData> consumerDataSet
+}
+
+class ProducerData{
+    - String groupName
+}
+
+class ConsumerData{
+    - String groupName
+    - ConsumeFromWhere consumeFromWhere
+    - Set<SubscriptionData> subscriptionDataSet
+}
+ConsumerData-->ConsumeFromWhere
+enum ConsumeFromWhere{
+    CONSUME_FROM_LAST_OFFSET
+    CONSUME_FROM_MAX_OFFSET
+    CONSUME_FROM_FIRST_OFFSET
+    CONSUME_FROM_TIMESTAMP
+}
+ConsumerData-->SubscriptionData
+class SubscriptionData{
+    - String topic;
+    - String subString
+    - Set<String> tagsSet
+    - Set<Integer> codeSet
+}
+HeartbeatData-->ProducerData
+HeartbeatData-->ConsumerData
+
+@enduml
