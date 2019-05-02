@@ -1,0 +1,24 @@
+@startuml
+autonumber
+ RebalanceService --> RebalanceService:run
+activate RebalanceService
+loop 20秒1次
+    RebalanceService --> MQClientInstance:doRebalance
+    MQClientInstance -->MQConsumerInner:doRebalance
+        note right
+        这个接口的2个类是DefaultMQPushConsumerImpl
+        DefaultMQPullConsumerImpl
+        分别对应拉和推两种消费者，本图取第1个
+        end note
+    MQConsumerInner -->RebalanceImpl:doRebalance
+    loop 对所有opic进行
+        RebalanceImpl-->RebalanceImpl:rebalanceByTopic
+        RebalanceImpl-->MQClientInstance:findConsumerIdList
+        RebalanceImpl-->AllocateMessageQueueStrategy:allocate
+            note right:实际采用AllocateMessageQueueAveragely的平均策略，得到本客户端可以消费的queueId列表
+        RebalanceImpl-->RebalanceImpl:updateProcessQueueTableInRebalance
+        RebalanceImpl-->RebalanceImpl:messageQueueChanged
+            note right:如果上一步返回结果ture，再执行这一步
+    end
+end
+@enduml

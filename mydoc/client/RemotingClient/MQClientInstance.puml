@@ -1,0 +1,52 @@
+@startuml
+
+class MQClientInstance {
+private final ClientConfig clientConfig
+    private final String clientId
+    private final long bootTimestamp
+    private final ConcurrentMap<String/* group */, MQProducerInner> producerTable
+    private final ConcurrentMap<String/* group */, MQConsumerInner> consumerTable
+    private final MQClientAPIImpl mQClientAPIImpl
+    private final ConcurrentMap<String/* Topic */, TopicRouteData> topicRouteTable
+    private final ConcurrentMap<String/* Broker Name */, HashMap<Long/* brokerId */, String/* address */>> brokerAddrTable
+    private final ConcurrentMap<String/* Broker Name */, HashMap<String/* address */, Integer>> brokerVersionTable
+    private final ScheduledExecutorService scheduledExecutorService
+    private final ClientRemotingProcessor clientRemotingProcessor
+    private final PullMessageService pullMessageService
+    private final RebalanceService rebalanceService
+}
+
+class MQClientAPIImpl{
+RemotingClient remotingClient
+}
+note right:这里实际启动netty
+
+class PullMessageService{
+   LinkedBlockingQueue<PullRequest> pullRequestQueue
+   MQClientInstance mQClientFactory
+   ScheduledExecutorService scheduledExecutorService
+}
+
+class RebalanceService{
+    public void run()
+}
+
+MQClientInstance -- MQClientAPIImpl
+
+MQClientAPIImpl -- RemotingClient
+
+interface RemotingClient{
+}
+
+abstract class NettyRemotingAbstract{
+
+}
+
+class NettyRemotingClient{
+}
+RemotingClient<|--NettyRemotingClient
+NettyRemotingAbstract <|--NettyRemotingClient
+MQClientInstance-->PullMessageService
+MQClientInstance-->RebalanceService
+
+@enduml

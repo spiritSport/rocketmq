@@ -4,6 +4,8 @@ interface MQAdmin{
 }
 
 interface MQProducer{
+public void start()
+public SendResult send( Message msg)
 }
 
 class ClientConfig{
@@ -12,6 +14,27 @@ class ClientConfig{
 class DefaultMQProducer{
 }
 note right:这里是入口类
+
+class Message{
+    - String topic;
+    - int flag;
+    - Map<String, String> properties;
+    - byte[] body;
+    - String transactionId;
+}
+DefaultMQProducer-->Message
+note right
+发送的消息
+topic是发送目标topic
+body是发送的数据
+end note
+
+class MessageQueue{
+    - String topic;
+    - String brokerName;
+    - int queueId;
+}
+DefaultMQProducer-->MessageQueue
 class DefaultMQProducerImpl{
 
 }

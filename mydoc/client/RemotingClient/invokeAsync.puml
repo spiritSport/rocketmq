@@ -3,7 +3,8 @@ autonumber
 调用者 --> NettyRemotingClient: invokeAsync
     note right
      这里传入1个InvokeCallback的匿名内部类，
-     其中operationComplete会在第6步WriteAndFlush异步返回数据时调用
+     其中operationComplete会在第6步WriteAndFlush异步返回数据(表示失败的数据)时调用
+     同时会被NettyRemotingAbstract.scanResponseTable调用
       end note
 NettyRemotingClient-->NettyRemotingClient:doBeforeRpcHooks
 NettyRemotingClient->NettyRemotingAbstract:invokeAsyncImpl

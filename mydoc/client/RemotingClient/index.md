@@ -19,3 +19,73 @@
 ## async请求的流程
 
 ![image](../../diagram/classDiagram/invokeAsync.png)
+
+## 定时执行
+NettyRemotingAbstract.scanResponseTable
+3秒后执行，每秒执行1次
+![image](../../diagram/classDiagram/scanResponseTable.png)
+
+```java
+    /**
+     * Execute callback in callback executor. If callback executor is null, run directly in current thread
+     */
+    private void executeInvokeCallback(final ResponseFuture responseFuture) {
+        boolean runInThisThread = false;
+        ExecutorService executor = this.getCallbackExecutor();
+        if (executor != null) {
+            try {
+                executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            responseFuture.executeInvokeCallback();
+                        } catch (Throwable e) {
+                            log.warn("execute callback in executor exception, and callback throw", e);
+                        } finally {
+                            responseFuture.release();
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                runInThisThread = true;
+                log.warn("execute callback in executor exception, maybe executor busy", e);
+            }
+        } else {
+            runInThisThread = true;
+        }
+
+        if (runInThisThread) {
+            try {
+                responseFuture.executeInvokeCallback();
+            } catch (Throwable e) {
+                log.warn("executeInvokeCallback Exception", e);
+            } finally {
+                responseFuture.release();
+            }
+        }
+    }
+```
+以上表示通过线程池的方法，异步执行这个操作
+
+实际几个客户端的默认回调线程如下
+
+### 默认生成者DefaultMQProducer
+代码在DefaultMQProducerImpl
+```java
+this.defaultAsyncSenderExecutor = new ThreadPoolExecutor(
+            Runtime.getRuntime().availableProcessors(),
+            Runtime.getRuntime().availableProcessors(),
+            1000 * 60,
+            TimeUnit.MILLISECONDS,
+            this.asyncSenderThreadPoolQueue,
+            new ThreadFactory() {
+                private AtomicInteger threadIndex = new AtomicInteger(0);
+
+                @Override
+                public Thread newThread(Runnable r) {
+                    return new Thread(r, "AsyncSenderExecutor_" + this.threadIndex.incrementAndGet());
+                }
+            });
+```
+
+消费者疑似没有这个过程

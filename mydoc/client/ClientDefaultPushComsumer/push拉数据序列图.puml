@@ -1,0 +1,57 @@
+@startuml
+autonumber
+PullMessageService -> PullMessageService: run
+loop 从pullRequestQueue里取数据
+    PullMessageService -> PullMessageService: pullMessage
+    PullMessageService ->DefaultMQPushConsumerImpl:pullMessage
+    activate DefaultMQPushConsumerImpl
+    alt isPause
+        DefaultMQPushConsumerImpl->DefaultMQPushConsumerImpl:executePullRequestLater
+        note right:延迟3000豪秒拉取，并提前return
+    end
+    alt 本地cache未消费的消息数> 拉取数据的最大门限
+        DefaultMQPushConsumerImpl->DefaultMQPushConsumerImpl:executePullRequestLater
+        note right :延迟50毫秒拉取，并提前return
+    end
+    alt 本地cache未消费的消息的大小（字节数）> 拉取数据的最大门限
+        DefaultMQPushConsumerImpl->DefaultMQPushConsumerImpl:executePullRequestLater
+        note right :延迟50毫秒拉取，并提前return
+    end
+    alt !consumeOrderly 表示不是顺序
+        alt processQueue.getMaxSpan() > this.defaultMQPushConsumer.getConsumeConcurrentlyMaxSpan()
+            DefaultMQPushConsumerImpl->DefaultMQPushConsumerImpl:executePullRequestLater
+            note right :延迟50毫秒拉取，并提前return
+        end
+        note right: TODO 这里没完全看懂
+    else
+        alt processQueue.isLocked()
+            alt  !pullRequest.isLockedFirst()
+                DefaultMQPushConsumerImpl-->RebalanceImpl:computePullFromWhere
+                note right:重新计算PullRequest的offset
+            end
+
+        else
+            DefaultMQPushConsumerImpl-->DefaultMQPushConsumerImpl:executePullRequestLater
+            note right: 延迟3000豪秒拉取，并提前return
+        end
+    end
+    note right
+        顺序和非顺序区别是，
+        非顺序会在50毫秒后发1个pullRequest，实现异步操作
+        顺序只会在本方法流程图的最下方发起一个pullRequest，是同步操作
+    end note
+
+    DefaultMQPushConsumerImpl-->RebalanceImpl:getSubscriptionInner().get
+    note right:从RebalanceImpl的subscriptionInner成员中重新获取SubscriptionData
+    DefaultMQPushConsumerImpl-->PullAPIWrapper :pullKernelImpl
+    note right:这里传入了1个回调方法（本类287行PullCallback） ,记为PullAPIWrapper.PullCallback 另行描述
+    activate PullAPIWrapper
+    PullAPIWrapper-->MQClientInstance:findBrokerAddressInSubscribe
+    alt 本地取不到broker信息
+        PullAPIWrapper->MQClientInstance:updateTopicRouteInfoFromNameServer
+        note right:从name server 拉取信息
+    end
+    PullAPIWrapper --> MQClientAPIImpl:getMQClientAPIImpl
+    MQClientAPIImpl --> MQClientAPIImpl:pullMessage
+ end
+@enduml

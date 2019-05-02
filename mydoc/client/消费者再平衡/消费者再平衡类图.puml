@@ -1,0 +1,73 @@
+@startuml
+class DefaultMQPushConsumer{
+     -  AllocateMessageQueueStrategy allocateMessageQueueStrategy
+     -Map<String /* topic */, String /* sub expression */> subscription
+
+}
+note right: pull模式的再平衡和这个差不多
+
+class AllocateMessageQueueAveragely{
+}
+note bottom :实际使用平均算法
+DefaultMQPushConsumer ..>AllocateMessageQueueAveragely
+class DefaultMQPushConsumerImpl{
+
+     - final RebalanceImpl rebalanceImpl
+  private MQClientInstance mQClientFactory
+    private PullAPIWrapper pullAPIWrapper
+    public void pullMessage(final PullRequest pullRequest)
+
+}
+DefaultMQPushConsumerImpl -->RebalanceImpl
+RebalancePullImpl--|>RebalanceImpl
+RebalancePushImpl--|>RebalanceImpl
+
+
+
+
+class RebalanceImpl{
+     ConcurrentMap<MessageQueue, ProcessQueue> processQueueTable
+        ConcurrentMap<String/* topic */, Set<MessageQueue>> topicSubscribeInfoTable
+        ConcurrentMap<String /* topic */, SubscriptionData> subscriptionInner
+      String consumerGroup
+      MessageModel messageModel
+      AllocateMessageQueueStrategy allocateMessageQueueStrategy
+}
+note bottom
+ 这个类负责实现再平衡策略
+ 选择的是平均负载策略
+end note
+
+
+
+class MQClientInstance{
+    - PullMessageService pullMessageService
+    - RebalanceService rebalanceService
+
+}
+
+
+class RebalanceService{
+ public void run()
+}
+note bottom
+ 通过定时任务的方式，触发rebalance
+ 通过RebalanceImpl来实现
+end note
+RebalanceService--|>ServiceThread
+MQClientInstance -->RebalanceService
+
+
+
+
+class ServiceThread{
+
+}
+
+PullMessageService --|>ServiceThread
+DefaultMQPushConsumer -- DefaultMQPushConsumerImpl
+
+DefaultMQPushConsumerImpl -->MQClientInstance
+MQClientInstance -->PullMessageService
+
+@enduml

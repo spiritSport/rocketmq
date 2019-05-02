@@ -1,0 +1,9 @@
+@startuml
+NettyRemotingAbstract ->NettyRemotingAbstract:scanResponseTable
+activate NettyRemotingAbstract
+loop 遍历responseTable
+NettyRemotingAbstract ->NettyRemotingAbstract: executeInvokeCallback
+
+end
+
+@enduml

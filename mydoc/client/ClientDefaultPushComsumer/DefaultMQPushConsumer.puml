@@ -1,0 +1,144 @@
+@startuml
+
+class DefaultMQPushConsumer{
+     -  AllocateMessageQueueStrategy allocateMessageQueueStrategy
+     -Map<String /* topic */, String /* sub expression */> subscription
+     - OffsetStore offsetStore
+     public void start()
+
+}
+note right:整个图的关系有的地方好像描述的不对
+class ClientConfig{
+
+}
+
+DefaultMQPushConsumer--|>ClientConfig
+class MQPushConsumer{
+}
+DefaultMQPushConsumer..|>MQPushConsumer
+
+
+class DefaultMQPushConsumerImpl{
+
+     - final RebalanceImpl rebalanceImpl
+  private MQClientInstance mQClientFactory
+    private PullAPIWrapper pullAPIWrapper
+     OffsetStore offsetStore
+    public void pullMessage(final PullRequest pullRequest)
+
+}
+note right:pullMessage是核心功能，拉数据
+DefaultMQPushConsumerImpl -->RebalanceImpl
+'RebalanceImpl-->ProcessQueue
+'RebalanceImpl-->MessageQueue
+
+interface ConsumeMessageService{
+ public void submitConsumeRequest( final List<MessageExt> msgs,  final ProcessQueue processQueue,
+    final MessageQueue messageQueue, final boolean dispathToConsume)
+}
+note top
+    submitConsumeRequest在pullRequest的回调中触发（DefaultMQPushConsumerImpl类312行）
+    这个方法是启动消费操作的类
+    这个接口有2个实现类ConsumeMessageConcurrentlyService、
+    ConsumeMessageOrderlyService分别实现并发消费和顺序消费
+end note
+DefaultMQPushConsumerImpl-->ConsumeMessageService
+ class RebalanceImpl{
+     ConcurrentMap<MessageQueue, ProcessQueue> processQueueTable
+        ConcurrentMap<String/* topic */, Set<MessageQueue>> topicSubscribeInfoTable
+        ConcurrentMap<String /* topic */, SubscriptionData> subscriptionInner
+      String consumerGroup
+      MessageModel messageModel
+      AllocateMessageQueueStrategy allocateMessageQueueStrategy
+}
+note bottom
+ 这个类负责实现再平衡策略
+ 当前版本选择的是平均负载策略
+end note
+class ProcessQueue{
+}
+
+
+class MQClientInstance{
+    - PullMessageService pullMessageService
+    - RebalanceService rebalanceService
+
+}
+
+
+class PullMessageService{
+    - LinkedBlockingQueue<PullRequest> pullRequestQueue
+   private void pullMessage(final PullRequest pullRequest)
+   public void run()
+
+}
+    note top
+    push模式使用这个类，pull模式不用
+    线程run方法循环从pullRequestQueue取到PullRequest
+    然后调用pullMessage从broker拉数据
+    end note
+
+class RebalanceService{
+ public void run()
+}
+note bottom
+ 通过定时任务的方式，触发rebalance
+ 通过RebalanceImpl来实现
+end note
+RebalanceService--|>ServiceThread
+MQClientInstance -->RebalanceService
+class PullRequest{
+  private String consumerGroup;
+    private MessageQueue messageQueue;
+    private ProcessQueue processQueue;
+    private long nextOffset;
+    private boolean lockedFirst = false;
+
+}
+note right:向broker申请拉数据的请求
+
+class MessageQueue{
+    - String topic;
+    - String brokerName;
+    - int queueId;
+}
+
+class ProcessQueue{
+    private final ReadWriteLock lockTreeMap
+    private final TreeMap<Long, MessageExt> msgTreeMap
+    private final AtomicLong msgCount
+    private final AtomicLong msgSize
+    private final Lock lockConsume
+    以下是顺序消费时用到的信息
+    private final TreeMap<Long, MessageExt> consumingMsgOrderlyTreeMap
+    private final AtomicLong tryUnlockTimes
+    private volatile long queueOffsetMax
+    private volatile boolean dropped
+    private volatile long lastPullTimestamp
+    private volatile long lastConsumeTimestamp
+    private volatile boolean locked
+    private volatile long lastLockTimestamp
+    private volatile boolean consuming
+    private volatile long msgAccCnt
+
+}
+note left
+    从borker端拉取的数据，会存在这里，
+    等到ConsumeMessageService来处理
+end note
+PullMessageService-->PullRequest
+PullRequest-->MessageQueue
+PullRequest-->ProcessQueue
+
+class ServiceThread{
+
+}
+
+PullMessageService --|>ServiceThread
+DefaultMQPushConsumer -- DefaultMQPushConsumerImpl
+'DefaultMQPushConsumer --> OffsetStore
+DefaultMQPushConsumerImpl --> OffsetStore
+DefaultMQPushConsumerImpl -->MQClientInstance
+MQClientInstance -->PullMessageService
+
+@enduml
