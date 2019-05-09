@@ -1,0 +1,142 @@
+@startuml
+
+
+interface RemotingClient{
+    RemotingCommand invokeSync(final String addr, final RemotingCommand request, final long timeoutMillis)
+    void invokeAsync(final String addr, final RemotingCommand request, final long timeoutMillis, final InvokeCallback invokeCallback)
+    void invokeOneway(final String addr, final RemotingCommand request, final long timeoutMillis)
+
+}
+note top
+
+     invokeSync 同步调用方法
+     invokeAsync 异步调用方法
+     invokeOneway 单向发送方法，不用返回值
+end note
+RemotingClient..> ExecutorService
+RemotingClient..> NettyRequestProcessor
+note bottom :borker所有的请求都是这个接口的实现类来最终处理
+abstract class NettyRemotingAbstract{
+  ConcurrentMap<Integer /* opaque */, ResponseFuture> responseTable
+  HashMap<Integer/* request code */, Pair<NettyRequestProcessor, ExecutorService>> processorTable
+  Pair<NettyRequestProcessor, ExecutorService> defaultRequestProcessor
+  List<RPCHook> rpcHooks
+   public void scanResponseTable()
+}
+note top
+    responseTable 存储待处理的ResponseFuture
+end note
+
+RequestTask--|>RemotingCommand
+ResponseFuture--|>RemotingCommand
+class RequestTask{
+     - final Runnable runnable
+    - final long createTimestamp
+    - final Channel channel
+    - final RemotingCommand request
+    - boolean stopRun
+}
+note bottom
+NettyRemotingAbstract processRequestCommand的时候，将请求数据发到borker
+end note
+NettyRemotingAbstract..>RequestTask
+
+class ResponseFuture{
+    - final int opaque
+    - final Channel processChannel
+    - final long timeoutMillis
+    - final InvokeCallback invokeCallback
+    - final long beginTimestamp
+    - final CountDownLatch countDownLatch
+
+    - final SemaphoreReleaseOnlyOnce once
+
+    - final AtomicBoolean executeCallbackOnlyOnce
+    - volatile RemotingCommand responseCommand
+    - volatile boolean sendRequestOK
+    - volatile Throwable cause
+}
+note bottom
+    opaque 是1个编号，用于从远端取回的数据和本地的匹配
+    invokeCallback 是需要执行的回调方法
+    processChannel 是netty实际的channel，在关闭的时候会用到
+end note
+NettyRemotingAbstract-->ResponseFuture
+
+class RemotingCommand{
+    - static AtomicInteger requestId = new AtomicInteger(0)
+    - int code
+    - int opaque  = requestId.getAndIncrement()
+    - byte[] body
+}
+note bottom
+    opaque是1个标记，回调时可以通过这个字段查询
+    赋值规则是逐次加1，保证不重复
+    body 是要传递的正文
+end note
+RemotingClient-->RemotingCommand
+class Channel{
+ ChannelFuture writeAndFlush(Object var1, ChannelPromise var2)
+}
+note bottom:netty的类，writeAndFlush方法直接发送请求
+class NettyRemotingClient{
+    NettyClientConfig nettyClientConfig
+    Bootstrap bootstrap
+    EventLoopGroup eventLoopGroupWorker
+    Lock lockChannelTables
+    ConcurrentMap<String /* addr */, ChannelWrapper> channelTables
+    Timer timer
+    AtomicReference<List<String>> namesrvAddrList
+    AtomicReference<String> namesrvAddrChoosed
+    AtomicInteger namesrvIndex
+    Lock lockNamesrvChannel
+    ExecutorService publicExecutor
+    ExecutorService callbackExecutor
+    ChannelEventListener channelEventListener
+    DefaultEventExecutorGroup defaultEventExecutorGroup
+    public void start()
+
+}
+note right: start方法启动netty客户端
+interface RemotingService{
+   void start()
+    void shutdown()
+    void registerRPCHook(RPCHook rpcHook);
+}
+RemotingService..> ExecutorService
+RemotingService..> NettyRequestProcessor
+
+interface RemotingServer{
+    void registerProcessor(final int requestCode, final NettyRequestProcessor processor,  final ExecutorService executor);
+    void registerDefaultProcessor(final NettyRequestProcessor processor, final ExecutorService executor);
+    int localListenPort();
+    Pair<NettyRequestProcessor, ExecutorService> getProcessorPair(final int requestCode);
+    RemotingCommand invokeSync(final Channel channel, final RemotingCommand request,  final long timeoutMillis)
+    void invokeAsync(final Channel channel, final RemotingCommand request, final long timeoutMillis, final InvokeCallback invokeCallback)
+    void invokeOneway(final Channel channel, final RemotingCommand request, final long timeoutMillis)
+}
+
+class NettyRemotingServer{
+      void start()
+    private final ServerBootstrap serverBootstrap
+    private final EventLoopGroup eventLoopGroupSelector
+    private final EventLoopGroup eventLoopGroupBoss
+    private final NettyServerConfig nettyServerConfig
+    private final ExecutorService publicExecutor
+    private final ChannelEventListener channelEventListener
+    private final Timer timer
+    private DefaultEventExecutorGroup defaultEventExecutorGroup
+
+}
+note right : 启动netty服务端
+
+
+NettyRemotingClient ..|>RemotingClient
+NettyRemotingClient --|>NettyRemotingAbstract
+NettyRemotingAbstract-->Channel
+
+NettyRemotingServer --|>NettyRemotingAbstract
+NettyRemotingServer..|>RemotingServer
+RemotingServer--|>RemotingService
+
+@enduml

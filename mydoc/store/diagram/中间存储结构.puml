@@ -1,0 +1,55 @@
+@startuml
+
+
+class DispatchRequest{
+}
+note top
+似乎是store专用的，入口是rePut
+end note
+class GetMessageResult{
+}
+
+class GetMessageStatus{
+}
+
+class AppendMessageResult{
+}
+
+class AppendMessageStatus{
+}
+
+class PutMessageResult{
+}
+
+class PutMessageStatus{
+}
+
+
+
+
+
+
+'abstract class AbstractList
+'abstract AbstractCollection
+'interface List
+'interface Collection
+'
+'List <|-- AbstractList
+'Collection <|-- AbstractCollection
+'
+'Collection <|- List
+'AbstractCollection <|- AbstractList
+'AbstractList <|-- ArrayList
+'
+'class ArrayList {
+'Object[] elementData
+'size()
+'}
+'
+'enum TimeUnit {
+'DAYS
+'HOURS
+'MINUTES
+'}
+
+@enduml

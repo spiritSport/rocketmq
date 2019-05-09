@@ -1,0 +1,100 @@
+@startuml
+class NettyRemotingServer{
+    private final ServerBootstrap serverBootstrap
+    private final EventLoopGroup eventLoopGroupSelector
+    private final EventLoopGroup eventLoopGroupBoss
+    private final NettyServerConfig nettyServerConfig
+    private final ExecutorService publicExecutor
+    private final ChannelEventListener channelEventListener
+    private final Timer timer
+    private DefaultEventExecutorGroup defaultEventExecutorGroup
+    public void start()
+    public void registerProcessor(int requestCode, NettyRequestProcessor processor, ExecutorService executor)
+    public void registerDefaultProcessor(NettyRequestProcessor processor, ExecutorService executor)
+    public RemotingCommand invokeSync(final Channel channel, final RemotingCommand request, final long timeoutMillis)
+    public void invokeAsync(Channel channel, RemotingCommand request, long timeoutMillis, InvokeCallback invokeCallback)
+    public void invokeOneway(Channel channel, RemotingCommand request, long timeoutMillis)
+}
+note right:start方法负责启动netty的服务端
+NettyRemotingServer-->DefaultEventExecutorGroup
+
+class NettyRemotingAbstract{
+public void processMessageReceived(ChannelHandlerContext ctx, RemotingCommand msg)
+}
+class NettyServerHandler{
+}
+class HandshakeHandler{
+}
+note bottom : bytes标记初始位置，去掉开头的tls的一些数据
+
+class NettyConnectManageHandler{
+}
+
+class ChannelDuplexHandler{
+
+}
+
+class SimpleChannelInboundHandler{
+protected void channelRead0(ChannelHandlerContext ctx, RemotingCommand msg)
+
+}
+class ChannelHandlerContext{
+  public void channelRegistered(ChannelHandlerContext ctx)
+  public void channelUnregistered(ChannelHandlerContext ctx)
+  public void channelActive(ChannelHandlerContext ctx)
+  public void channelInactive(ChannelHandlerContext ctx)
+  public void userEventTriggered(ChannelHandlerContext ctx, Object evt)
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
+}
+ChannelDuplexHandler..>ChannelHandlerContext
+ChannelHandlerContext--|>DefaultAttributeMap
+note bottom :这里是一个map，存储channel
+
+AbstractChannelHandlerContext..|>ChannelHandlerContext
+NettyServerHandler --|>SimpleChannelInboundHandler
+HandshakeHandler --|>SimpleChannelInboundHandler
+
+NettyConnectManageHandler --|>ChannelDuplexHandler
+
+NettyRemotingServer +-- NettyServerHandler
+NettyRemotingServer +-- HandshakeHandler
+NettyRemotingServer +-- NettyConnectManageHandler
+
+NettyRemotingServer--|>NettyRemotingAbstract
+NettyRemotingServer..|>RemotingServer
+NettyRemotingServer--ExecutorService
+
+class ChannelEventListener{
+  NamesrvController namesrvController
+  public void onChannelConnect(String remoteAddr, Channel channel)
+  public void onChannelClose(String remoteAddr, Channel channel)
+  public void onChannelException(String remoteAddr, Channel channel)
+  public void onChannelIdle(String remoteAddr, Channel channel)
+}
+
+NettyRemotingServer--ChannelEventListener
+'BrokerHousekeepingService..>ChannelEventListener
+'abstract class AbstractList
+'abstract AbstractCollection
+'interface List
+'interface Collection
+'
+'List <|-- AbstractList
+'Collection <|-- AbstractCollection
+'
+'Collection <|- List
+'AbstractCollection <|- AbstractList
+'AbstractList <|-- ArrayList
+'
+'class ArrayList {
+'Object[] elementData
+'size()
+'}
+'
+'enum TimeUnit {
+'DAYS
+'HOURS
+'MINUTES
+'}
+
+@enduml

@@ -1,0 +1,65 @@
+@startuml
+
+
+abstract class ReferenceResource{
+}
+
+class MappedFile{
+FileChannel fileChannel
+ByteBuffer writeBuffer
+protected TransientStorePool
+MappedByteBuffer mappedByteBuffer
+ File file
+  String fileName
+}
+
+class MappedFileQueue{
+ CopyOnWriteArrayList<MappedFile> mappedFiles
+}
+
+class CommitLog{
+}
+class ConsumeQueue{
+}
+class ConsumeQueueExt{
+}
+
+class IndexFile{
+}
+class IndexHeader{
+}
+
+MappedFile--|>ReferenceResource
+
+MappedFileQueue-->MappedFile
+CommitLog -->MappedFileQueue
+ConsumeQueue-->MappedFileQueue
+ConsumeQueueExt-->MappedFileQueue
+
+IndexFile-->MappedFile
+IndexFile-->IndexHeader
+
+
+'abstract AbstractCollection
+'interface List
+'interface Collection
+'
+'List <|-- AbstractList
+'Collection <|-- AbstractCollection
+'
+'Collection <|- List
+'AbstractCollection <|- AbstractList
+'AbstractList <|-- ArrayList
+'
+'class ArrayList {
+'Object[] elementData
+'size()
+'}
+'
+'enum TimeUnit {
+'DAYS
+'HOURS
+'MINUTES
+'}
+
+@enduml

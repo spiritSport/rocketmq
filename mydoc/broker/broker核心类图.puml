@@ -1,0 +1,110 @@
+@startuml
+
+class BrokerStartup{
+}
+
+class BrokerController{
+    private final BrokerConfig brokerConfig
+    private final NettyServerConfig nettyServerConfig
+    private final NettyClientConfig nettyClientConfig
+    private final MessageStoreConfig messageStoreConfig
+    private final ConsumerOffsetManager consumerOffsetManager
+    private final ConsumerManager consumerManager
+    private final ConsumerFilterManager consumerFilterManager
+    private final ProducerManager producerManager
+    private final ClientHousekeepingService clientHousekeepingService
+    private final PullMessageProcessor pullMessageProcessor
+    private final PullRequestHoldService pullRequestHoldService
+    private final MessageArrivingListener messageArrivingListener
+    private final Broker2Client broker2Client
+    private final SubscriptionGroupManager subscriptionGroupManager
+    private final ConsumerIdsChangeListener consumerIdsChangeListener
+    private final RebalanceLockManager rebalanceLockManager
+    private final BrokerOuterAPI brokerOuterAPI
+    private final ScheduledExecutorService scheduledExecutorService
+    private final SlaveSynchronize slaveSynchronize
+    private final BlockingQueue<Runnable> sendThreadPoolQueue
+    private final BlockingQueue<Runnable> pullThreadPoolQueue
+    private final BlockingQueue<Runnable> queryThreadPoolQueue
+    private final BlockingQueue<Runnable> clientManagerThreadPoolQueue
+    private final BlockingQueue<Runnable> heartbeatThreadPoolQueue
+    private final BlockingQueue<Runnable> consumerManagerThreadPoolQueue
+    private final BlockingQueue<Runnable> endTransactionThreadPoolQueue
+    private final FilterServerManager filterServerManager
+    private final BrokerStatsManager brokerStatsManager
+    private final List<SendMessageHook> sendMessageHookList
+    private final List<ConsumeMessageHook> consumeMessageHookList
+    private MessageStore messageStore
+    private RemotingServer remotingServer
+    private RemotingServer fastRemotingServer
+    private TopicConfigManager topicConfigManager
+    private ExecutorService sendMessageExecutor
+    private ExecutorService pullMessageExecutor
+    private ExecutorService queryMessageExecutor
+    private ExecutorService adminBrokerExecutor
+    private ExecutorService clientManageExecutor
+    private ExecutorService heartbeatExecutor
+    private ExecutorService consumerManageExecutor
+    private ExecutorService endTransactionExecutor
+    private boolean updateMasterHAServerAddrPeriodically = false
+    private BrokerStats brokerStats
+    private InetSocketAddress storeHost
+    private BrokerFastFailure brokerFastFailure
+    private Configuration configuration
+    private FileWatchService fileWatchService
+    private TransactionalMessageCheckService transactionalMessageCheckService
+    private TransactionalMessageService transactionalMessageService
+    private AbstractTransactionalMessageCheckListener transactionalMessageCheckListener
+    private Future<?> slaveSyncFuture
+}
+
+
+
+
+BrokerStartup..>BrokerController
+'BrokerController-->BrokerConfig
+'BrokerController-->NettyServerConfig
+'BrokerController-->NettyClientConfig
+'BrokerController-->ConsumerOffsetManager
+'BrokerController-->ConsumerManager
+'BrokerController-->ConsumerFilterManager
+'BrokerController-->ProducerManager
+'BrokerController-->ClientHousekeepingService
+'BrokerController-->PullMessageProcessor
+'BrokerController-->PullRequestHoldService
+'BrokerController-->MessageArrivingListener
+'BrokerController-->Broker2Client
+'BrokerController-->SubscriptionGroupManager
+'BrokerController-->ConsumerIdsChangeListener
+'BrokerController-->Broker2Client
+'BrokerController-->Broker2Client
+'BrokerController-->Broker2Client
+'BrokerController-->Broker2Client
+
+
+
+'
+'abstract class AbstractList
+'abstract AbstractCollection
+'interface List
+'interface Collection
+'
+'List <|-- AbstractList
+'Collection <|-- AbstractCollection
+'
+'Collection <|- List
+'AbstractCollection <|- AbstractList
+'AbstractList <|-- ArrayList
+'
+'class ArrayList {
+'Object[] elementData
+'size()
+'}
+'
+'enum TimeUnit {
+'DAYS
+'HOURS
+'MINUTES
+'}
+
+@enduml

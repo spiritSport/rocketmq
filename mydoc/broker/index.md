@@ -1,3 +1,9 @@
+
+## broker功能
+和client nameserver通讯
+
+消息写入、读取、查询
+
 ## BrokerController定时任务
 
 时间单位默认毫秒
